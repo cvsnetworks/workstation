@@ -1,0 +1,46 @@
+#!/bin/bash -e
+
+#
+# Install the Amazon EFS utilities
+# https://docs.aws.amazon.com/efs/latest/ug/installing-amazon-efs-utils.html
+#
+
+sudo apt-get update
+
+sudo apt-get install -y \
+	git \
+	binutils
+
+git clone https://github.com/aws/efs-utils /tmp/efs-utils
+
+cd /tmp/efs-utils
+
+./build-deb.sh
+
+sudo apt-get install -y ./build/amazon-efs-utils*deb
+
+#
+# Install the latest stunnel
+# https://docs.aws.amazon.com/efs/latest/ug/upgrading-stunnel.html
+#
+
+sudo apt-get install -y \
+	build-essential \
+	libssl-dev \
+	libwrap0-dev
+
+sudo curl -o "/tmp/stunnel-${STUNNEL_VERSION}.tar.gz" "https://www.stunnel.org/downloads/stunnel-${STUNNEL_VERSION}.tar.gz"
+
+sudo tar xvfz "/tmp/stunnel-${STUNNEL_VERSION}.tar.gz" --directory "/tmp"
+
+cd "/tmp/stunnel-${STUNNEL_VERSION}"
+
+sudo ./configure
+
+sudo make
+
+sudo rm /bin/stunnel
+
+sudo make install
+
+sudo ln -s /usr/local/bin/stunnel /bin/stunnel

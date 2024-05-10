@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+
+# script/build: Configure the environment and build any artifacts.
+
+set -e
+
+cd "$(dirname "$0")/.."
+
+script/bootstrap
+
+function terraform_plan() {
+	local var_file_path="./environments/${tf_vars_file}"
+
+	echo "==> Selecting the ${tf_env} workspace…"
+	export TF_WORKSPACE=$tf_env
+
+	echo "==> Initializing Terraform…"
+	terraform -chdir=$tf_dir init -var-file=$var_file_path
+
+	echo "==> Executing a Terraform plan…"
+	terraform -chdir=$tf_dir plan -var-file=$var_file_path
+}
+
+function set_env_variables() {
+	case $ENV in
+
+		"non-prod")
+			echo "==> Using settings for the ${ENV} environment…"
+			tf_vars_file="${ENV}.tfvars"
+			tf_env=$ENV
+		;;
+
+		*)
+			echo "==> Unknown environment.  Please set the ENV variable."
+			exit 1
+		;;
+
+	esac
+}
+
+function main() {
+	# Environment-determined variables
+	local tf_vars_file
+	local tf_env
+
+	set_env_variables
+
+	local tf_dir="terraform"
+
+	terraform_plan
+}
+
+main "$@"

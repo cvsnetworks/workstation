@@ -1,0 +1,19 @@
+#!/bin/bash -e
+
+#
+# Set the group owner of the asdf installation directory
+#
+
+sudo chown --recursive root:developers $ASDF_DIR
+
+#
+# Set the group owner of the pipx installation directory
+#
+
+sudo chown --recursive root:developers $PIPX_HOME
+
+#
+# Set the group owner of the dotnet tools directory
+#
+
+sudo chown --recursive root:developers $DOTNET_TOOLS_DIR

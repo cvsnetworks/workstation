@@ -1,0 +1,42 @@
+#!/bin/bash -e
+
+#
+# Set up a user's home directory with defaults
+#
+
+function mount_tmp() {
+	sudo mkdir --parents "/tmp/efs"
+
+	sudo mount -t efs -o tls "${efs_id}.efs.us-east-1.amazonaws.com" "/tmp/efs"
+}
+
+function create_home() {
+	sudo mkdir --parents "/tmp/efs/home/${username}"
+	sudo mkdir --parents "/tmp/efs/home/${username}/.ssh"
+}
+
+function copy_dot_files() {
+	sudo cp "/home/ubuntu/.bashrc" "/tmp/efs/home/${username}/.bashrc"
+	sudo cp "/home/ubuntu/.bash_logout" "/tmp/efs/home/${username}/.bash_logout"
+	sudo cp "/home/ubuntu/.profile" "/tmp/efs/home/${username}/.profile"
+	sudo cp "/home/ubuntu/.gitconfig" "/tmp/efs/home/${username}/.gitconfig"
+	sudo cp "/home/ubuntu/.gitmessage" "/tmp/efs/home/${username}/.gitmessage"
+	sudo cp "/home/ubuntu/.tool-versions" "/tmp/efs/home/${username}/.tool-versions"
+	sudo cp "/home/ubuntu/.ssh/authorized_keys" "/tmp/efs/home/${username}/.ssh/authorized_keys"
+}
+
+function unmount_tmp() {
+	sudo umount "/tmp/efs"
+}
+
+function main() {
+	local username=$1
+	local efs_id=$2
+
+	mount_tmp
+	create_home
+	copy_dot_files
+	unmount_tmp
+}
+
+main "$@"

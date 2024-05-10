@@ -1,0 +1,46 @@
+stages:
+  - test
+  - packer
+  - terraform
+
+#
+# test
+#
+
+test:
+  stage: test
+  script:
+    - script/test
+
+#
+# packer
+#
+
+packer:
+  stage: packer
+  variables:
+    ENV: "non-prod"
+  script:
+    - script/deploy "packer"
+  rules:
+    - if: $CI_MERGE_REQUEST_ID
+      when: never
+    - if: $CI_COMMIT_REF_NAME == "main"
+      changes:
+        - packer/**/*
+  tags:
+    - "non-prod"
+
+#
+# terraform
+#
+
+terraform-non-prod:
+  stage: terraform
+  variables:
+    ENV: "non-prod"
+    ENV_TYPE: "non-prod"
+  trigger:
+    include:
+      - local: .gitlab/.terraform-ci.yml
+    strategy: depend

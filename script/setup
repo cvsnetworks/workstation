@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+# script/setup: Set up the application for the first time after cloning.
+
+set -e
+
+cd "$(dirname "$0")/.."
+
+script/bootstrap
+
+if [[ -z $(command -v pre-commit) ]]; then
+	echo "==> Unable to find pre-commit.  Please install it and retry."
+	exit 1
+else
+	echo "==> Installing pre-commit hooks…"
+	pre-commit install
+fi

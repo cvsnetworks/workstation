@@ -1,0 +1,87 @@
+#!/bin/bash -e
+
+#
+# Prepare the package manager
+#
+
+sudo add-apt-repository universe
+
+sudo apt-get update
+
+#
+# Install common packages
+#
+
+sudo apt-get install -y \
+	git \
+	jq \
+	zip
+
+#
+# Install the asdf version manager
+#
+
+sudo git clone https://github.com/asdf-vm/asdf.git $ASDF_DIR --branch v0.10.2
+
+# Install asdf plugin dependencies
+sudo apt-get install -y \
+	curl \
+	unzip
+
+#
+# Create a developers user group
+#
+
+sudo groupadd developers
+sudo usermod -a -G developers $USER
+
+#
+# Prepare the asdf installation directory
+#
+
+sudo chown --recursive root:$USER $ASDF_DIR
+sudo chmod 775 $ASDF_DIR
+
+# Configure asdf for use in bash
+cat >> ~/.bashrc << EOF
+
+# Configure asdf version manager
+export ASDF_DIR="${ASDF_DIR}"
+export ASDF_DATA_DIR="${ASDF_DATA_DIR}"
+
+. ${ASDF_DIR}/asdf.sh
+. ${ASDF_DIR}/completions/asdf.bash
+EOF
+
+#
+# Prepare the pipx installation directory
+#
+
+sudo mkdir $PIPX_HOME
+sudo chown --recursive root:$USER $PIPX_HOME
+sudo chmod 775 $PIPX_HOME
+
+# Configure pipx for use in bash
+cat >> ~/.bashrc << EOF
+
+# Configure pipx
+export PIPX_HOME="${PIPX_HOME}"
+export PIPX_BIN_DIR="${PIPX_BIN_DIR}"
+export PATH="\${PATH}:\${PIPX_BIN_DIR}"
+EOF
+
+#
+# Prepare the dotnet tools directory
+#
+
+sudo mkdir $DOTNET_TOOLS_DIR
+sudo chown --recursive root:$USER $DOTNET_TOOLS_DIR
+sudo chmod 775 $DOTNET_TOOLS_DIR
+
+# Configure dotnet tools for use in bash
+cat >> ~/.bashrc << EOF
+
+# Configure .NET tools
+export PATH="\${PATH}:${DOTNET_TOOLS_DIR}"
+EOF
+

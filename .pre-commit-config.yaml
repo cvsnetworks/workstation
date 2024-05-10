@@ -1,0 +1,12 @@
+repos:
+- repo: https://github.com/antonbabenko/pre-commit-terraform
+  rev: v1.50.0
+  hooks:
+  - id: terraform_fmt
+- repo: local
+  hooks:
+  - id: packer_fmt
+    name: packer_fmt
+    language: script
+    files: (\.pkr.hcl|\.pkrvars.hcl)$
+    entry: hooks/packer_fmt

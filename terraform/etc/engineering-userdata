@@ -1,0 +1,47 @@
+#!/bin/bash -e
+
+#
+# Add engineering user accounts
+#
+
+function create_user() {
+	local username=$1
+
+	sudo useradd --no-create-home --shell "/bin/bash" $username
+	sudo usermod -a -G "developers" $username
+	sudo usermod -a -G "docker" $username
+}
+
+function configure_sudoers() {
+	local username=$1
+
+	sudo usermod -a -G "sudo" $username
+
+	sudo cat >> /etc/sudoers.d/engineering << EOF
+# User rules for $username
+$username ALL=(ALL) NOPASSWD:ALL
+
+EOF
+}
+
+function mount_home() {
+	local username=$1
+
+	sudo mkdir --parents "/home/$${username}"
+
+	sudo mount -t efs -o tls "${efs_id}.efs.us-east-1.amazonaws.com":"/home/$${username}" "/home/$${username}"
+
+	sudo chown --recursive $username:$username "/home/$${username}"
+}
+
+function main() {
+	create_user "rfield"
+	configure_sudoers "rfield"
+	mount_home "rfield"
+
+	create_user "jendrihs"
+	configure_sudoers "jendrihs"
+	mount_home "jendrihs"
+}
+
+main "$@"

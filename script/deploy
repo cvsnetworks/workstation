@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+
+# script/deploy: Deploy the application artifacts.
+
+set -e
+
+cd "$(dirname "$0")/.."
+
+script/bootstrap
+
+function terraform_apply() {
+	local var_file_path="./environments/${tf_vars_file}"
+
+	echo "==> Selecting the ${tf_env} workspace…"
+	export TF_WORKSPACE=$tf_env
+
+	echo "==> Executing a Terraform apply…"
+	terraform -chdir=$tf_dir apply -var-file=$var_file_path
+}
+
+function packer_build() {
+	echo "==> Building the Engineering workstation AMI…"
+	packer build \
+		--var-file="packer/environments/${pkr_vars_file}" \
+		"packer/engineering-workstation.pkr.hcl"
+}
+
+function set_env_variables() {
+	case $ENV in
+
+		"non-prod")
+			echo "==> Using settings for the ${ENV} environment…"
+			tf_vars_file="${ENV}.tfvars"
+			tf_env=$ENV
+			pkr_vars_file="${ENV}.pkrvars.hcl"
+		;;
+
+		*)
+			echo "==> Unknown environment.  Please set the ENV variable."
+			exit 1
+		;;
+
+	esac
+}
+
+function main() {
+	# Define the default variables
+	local target=${1:-"terraform"}
+
+	# Environment-determined variables
+	local tf_vars_file
+	local tf_env
+	local pkr_vars_file
+
+	set_env_variables
+
+	local tf_dir="terraform"
+
+	case $target in
+
+		"terraform")
+			terraform_apply
+		;;
+
+		"packer")
+			packer_build
+		;;
+
+		*)
+			echo "==> Unknown build target"
+			exit 1
+		;;
+
+	esac
+}
+
+main "$@"

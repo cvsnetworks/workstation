@@ -1,0 +1,34 @@
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Sid": "AllowGitLab",
+			"Effect": "Allow",
+			"Action": [
+				"sts:AssumeRole"
+			],
+			"Principal": {
+				"AWS": [
+					"${gitlab_runner_role_arn}"
+				]
+			}
+		},
+		{
+			"Sid": "AllowUsers",
+			"Effect": "Allow",
+			"Action": [
+				"sts:AssumeRole"
+			],
+			"Principal": {
+				"AWS": [
+					"arn:aws:iam::${management_account_id}:root"
+				]
+			},
+			"Condition": {
+				"StringEquals": {
+					"aws:PrincipalType": "User"
+				}
+			}
+		}
+	]
+}

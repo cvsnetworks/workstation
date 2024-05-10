@@ -1,0 +1,253 @@
+#!/bin/bash -e
+
+. "${ASDF_DIR}/asdf.sh"
+
+#
+# Install the Terraform CLI
+#
+
+asdf plugin add terraform
+asdf install terraform $TERRAFORM_VERSION
+asdf global terraform $TERRAFORM_VERSION
+
+# Configure tab completion
+terraform -install-autocomplete
+
+#
+# Install terraform-docs
+#
+
+asdf plugin add terraform-docs
+asdf install terraform-docs $TERRAFORM_DOCS_VERSION
+asdf global terraform-docs $TERRAFORM_DOCS_VERSION
+
+#
+# Install the Packer CLI
+#
+
+asdf plugin add packer
+asdf install packer $PACKER_VERSION
+asdf global packer $PACKER_VERSION
+
+#
+# Ensure the pyenv dependencies are installed
+#
+
+sudo apt-get install -y \
+	build-essential \
+	curl \
+	libbz2-dev \
+	libffi-dev \
+	liblzma-dev \
+	libncursesw5-dev \
+	libreadline-dev \
+	libssl-dev \
+	libsqlite3-dev \
+	libxml2-dev \
+	libxmlsec1-dev \
+	llvm \
+	make \
+	python3-distutils \
+	tk-dev \
+	wget \
+	xz-utils \
+	zlib1g-dev
+
+#
+# Install Python
+#
+
+asdf plugin add python
+asdf install python $PYTHON_VERSION
+asdf global python $PYTHON_VERSION
+
+#
+# Install Poetry
+#
+
+asdf plugin add poetry
+asdf install poetry $POETRY_VERSION
+asdf global poetry $POETRY_VERSION
+
+#
+# Install pipx
+#
+
+python3 -m pip install --user pipx==$PIPX_VERSION
+
+# Add pipx to the PATH for this shell
+export PATH="${PATH}:$(python3 -c 'import site; print(site.USER_BASE)')/bin"
+
+# Add the pipx bin to the PATH for this shell
+export PATH="${PATH}:${PIPX_BIN_DIR}"
+
+#
+# Install pyclean
+#
+
+pipx install pyclean
+
+#
+# Install the AWS CLI
+#
+
+asdf plugin add awscli
+asdf install awscli $AWS_VERSION
+asdf global awscli $AWS_VERSION
+
+# Configure tab completion
+complete -C '$(which aws_completer)' aws
+
+#
+# Install the AWS SAM CLI
+#
+
+asdf plugin add aws-sam-cli https://github.com/amrox/asdf-pyapp.git
+asdf install aws-sam-cli $AWS_SAM_VERSION
+asdf global aws-sam-cli $AWS_SAM_VERSION
+
+#
+# Install AWSume for IAM role switching.
+#
+
+pipx install awsume
+awsume-configure
+
+#
+# Install .NET Core
+#
+
+asdf plugin add dotnet-core
+asdf install dotnet-core $DOTNET_VERSION
+asdf global dotnet-core $DOTNET_VERSION
+
+#
+# Configure .NET Shell Variables
+#
+
+cat >> ~/.bashrc << EOF
+
+# Configure .NET Core
+export DOTNET_ROOT="\$(asdf where dotnet-core)"
+export DOTNET_MSBUILD_SDK_RESOLVER_SDKS_DIR="\$(echo $(asdf where dotnet-core)/sdk/*/Sdks)"
+export DOTNET_MSBUILD_SDK_RESOLVER_SDKS_VER="${DOTNET_VERSION}"
+export DOTNET_MSBUILD_SDK_RESOLVERCLI_DIR="\$(echo \$(asdf where dotnet-core))"
+
+# Enable bash completion for dotnet
+_dotnet_bash_complete()
+{
+  local word=\\\${COMP_WORDS[COMP_CWORD]}
+
+  local completions
+  completions="$(dotnet complete --position "\\\${COMP_POINT}" "\\\${COMP_LINE}" 2>/dev/null)"
+  if [ \\\$? -ne 0 ]; then
+    completions=""
+  fi
+
+  COMPREPLY=( \$(compgen -W "\\\$completions" -- "\\\$word") )
+}
+
+complete -f -F _dotnet_bash_complete dotnet
+EOF
+
+#
+# Install GitVersion
+#
+
+dotnet tool install \
+	--tool-path $DOTNET_TOOLS_DIR \
+	GitVersion.Tool \
+	--version $GITVERSION_VERSION
+
+#
+# Install the Node.js depdencies
+#
+
+sudo apt-get install -y \
+	bc
+
+#
+# Install Node.js
+#
+
+asdf plugin add nodejs
+asdf install nodejs $NODE_VERSION
+asdf global nodejs $NODE_VERSION
+
+#
+# Install pnpm
+#
+
+asdf plugin add pnpm
+asdf install pnpm $PNPM_VERSION
+asdf global pnpm $PNPM_VERSION
+
+#
+# Install the Docker Engine and CLI
+#
+
+# Ensure the pre-requisite packages are installed.
+sudo apt-get install -y \
+	ca-certificates \
+	curl \
+	gnupg \
+	lsb-release
+
+# Add the official Docker GPG key.
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+
+# Add the stable apt repository.
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# Install the Docker engine and CLI.
+sudo apt-get update
+
+sudo apt-get install -y \
+	containerd.io \
+	docker-ce \
+	docker-ce-cli \
+	docker-compose-plugin
+
+# Ensure the docker group exists
+sudo groupadd docker || true
+
+# Add yourself to the docker group
+sudo usermod -aG docker $USER
+
+#
+# Install kubectl
+#
+
+asdf plugin add kubectl
+asdf install kubectl $KUBECTL_VERSION
+asdf global kubectl $KUBECTL_VERSION
+
+#
+# Install Helm
+#
+
+asdf plugin add helm
+asdf install helm $HELM_VERSION
+asdf global helm $HELM_VERSION
+
+#
+# Install kind
+#
+
+asdf plugin add kind
+asdf install kind $KIND_VERSION
+asdf global kind $KIND_VERSION
+
+#
+# Configure Git
+#
+
+git config --global commit.template ~/.gitmessage
+
+#
+# Install cookiecutter
+#
+
+pipx install cookiecutter
